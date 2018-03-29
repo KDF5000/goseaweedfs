@@ -660,3 +660,18 @@ func (c *Seaweed) DeleteFile(fileID string, args url.Values) (err error) {
 
 	return nil
 }
+
+//Get file by fileID, added by KDF5000
+func (c *Seaweed) GetFile(fileID string) (byteRead []byte, err error) {
+	res, err := c.LookupNoCache(fileID, nil)
+	if err != nil || len(res.VolumeLocations) == 0 {
+		return nil, fmt.Errorf("Get key:%s, error:%v\n", fileID, err)
+	}
+
+	loc := res.VolumeLocations.RandomPickForRead()
+	if byteRead, statusCode, err := c.HTTPClient.Get("http", loc.URL, "/"+fileID, nil); err == nil && statusCode == 200 {
+		return byteRead, nil
+	} else {
+		return nil,fmt.Errorf("Get file content error:%v\n", err)
+	}
+}
